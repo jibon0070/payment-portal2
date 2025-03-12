@@ -8,6 +8,8 @@ services:
     volumes:
       - node_modules:/app/node_modules
       - ./:/app
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
 
 volumes:
   node_modules:
