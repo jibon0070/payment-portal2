@@ -1,3 +1,4 @@
+import getServerToken from "@/lib/get-server-token";
 import { z } from "zod";
 
 const schema = z
@@ -14,3 +15,30 @@ const schema = z
     message: "Package is required. [create]",
     path: ["package"],
   });
+
+async function checkExtraData(data: z.infer<typeof schema>) {
+  const body =
+    data.service === "premium"
+      ? {
+          token: data.token,
+          amount: data.amount,
+          package: data.package,
+          service: data.service,
+          refer_code: data.refer_code,
+        }
+      : { token: data.token, amount: data.amount, service: data.service };
+
+  const r: ResponseWraper = await fetch(process.env.BACKEND_CHECK_URL!, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getServerToken()}`,
+      Accept: "application/json",
+    },
+  }).then((r) => r.json());
+
+  if (!r.success) {
+    throw new Error(r.message);
+  }
+}
