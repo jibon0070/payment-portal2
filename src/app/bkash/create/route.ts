@@ -1,4 +1,8 @@
+import getBkashToken from "@/lib/get-bkash-token";
+import getRandomNumber from "@/lib/get-random-number";
 import getServerToken from "@/lib/get-server-token";
+import ResponseWraper from "@/types/response-wraper";
+import { NextRequest } from "next/server";
 import { z } from "zod";
 
 const schema = z
@@ -15,6 +19,46 @@ const schema = z
     message: "Package is required. [create]",
     path: ["package"],
   });
+
+export async function POST(req: NextRequest) {
+  try {
+    const data = schema.parse(await req.json());
+
+    await checkExtraData(data);
+
+    const token: string = await getBkashToken();
+
+    const invoice = `${Date.now()}${getRandomNumber(0, 9999)}`;
+
+    const headers = {
+      Accept: "application/json",
+      Authorization: token,
+      "Content-Type": "application/json",
+      "X-APP-Key": process.env.BKASH_APP_KEY!,
+    };
+
+    const body = JSON.stringify({
+      amount: data.amount,
+      currency: "BDT",
+      intent: "sale",
+      merchantInvoiceNumber: invoice,
+    });
+
+    const response = await fetch(
+      `${process.env.BKASH_BASE_URL}/checkout/payment/create`,
+      { method: "POST", body, headers },
+    ).then((r) => r.json());
+
+    console.log(response);
+
+    return Response.json({ success: true, response });
+  } catch (e) {
+    return Response.json({
+      success: false,
+      message: e instanceof Error ? e.message : e,
+    });
+  }
+}
 
 async function checkExtraData(data: z.infer<typeof schema>) {
   const body =
