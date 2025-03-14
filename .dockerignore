@@ -3,3 +3,4 @@
 Dockerfile.dev
 next-env.d.ts
 .env
+/build

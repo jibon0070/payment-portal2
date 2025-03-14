@@ -1,0 +1,6 @@
+services:
+  payment-portal-web:
+    build:
+      context: ../
+      dockerfile: Dockerfile.prod
+    image: payment-portal
